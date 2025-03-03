@@ -23,14 +23,20 @@ def train():
     # hyperparameters = data.get("hyperparameters", {})
     return train_models(target_column, task_type, selected_algorithms)
 
-@algorithm_bp.route('/metrics/<model_id>', methods=['GET'])
-def metrics(model_id):
-    return get_metrics(model_id)
-
-@algorithm_bp.route('/predict/<model_id>', methods=['POST'])
-def predict_route(model_id):
+@algorithm_bp.route('/metrics', methods=['GET'])
+def metrics():
     data = request.get_json()
-    return predict(model_id, data)
+    model_id = data.get("model_id")
+    task_type = data.get("task_type")
+    return get_metrics(model_id, task_type)
+
+@algorithm_bp.route('/predict', methods=['POST'])
+def predict_route():
+    data = request.get_json()
+    model_id = data.get("model_id")
+    inputs = data.get("inputs")
+    target = data.get("target")
+    return predict(model_id, inputs, target)
 
 @algorithm_bp.route('/download/<model_id>', methods=['GET'])
 def download(model_id):

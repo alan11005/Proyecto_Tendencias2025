@@ -9,7 +9,10 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, mean_squared_error
+# Metricas para regresion
+from sklearn.metrics import mean_squared_error, accuracy_score, r2_score, mean_absolute_error, median_absolute_error
+# Metricas para clasificacion
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, precision_recall_curve, f1_score, recall_score, precision_score, accuracy_score
 
 # Opcional: Si se quiere usar XGBoost, se debe tener instalada la librería
 try:
@@ -19,6 +22,7 @@ except ImportError:
     XGB_AVAILABLE = False
 
 DATA_PATH = '../Back/models'
+SPLIT_DATA_PATH = '../Back/dataset_utils/split_data'
 
 # Diccionarios que mapean el nombre del algoritmo con la clase correspondiente para clasificación y regresión
 CLASSIFICATION_MODELS = {
@@ -52,7 +56,7 @@ def upload_dataset(file):
     try:
         df = pd.DataFrame(file)
         # Se podría guardar temporalmente el dataset para usarlo en el entrenamiento
-        df.to_csv("../Back/uploaded_dataset/dataset.csv", index=False)
+        df.to_csv("../Back/dataset_utils/dataset/dataset.csv", index=False)
         return jsonify({"columns": df.columns.tolist(), "message": "Dataset cargado correctamente"})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -69,7 +73,7 @@ def select_target(task_type):
 def train_models(target_column, task_type, selected_algorithms):
     try:
         # Se asume que el dataset ya fue cargado y guardado en "dataset.csv"
-        df = pd.read_csv("../Back/uploaded_dataset/dataset.csv")
+        df = pd.read_csv("../Back/dataset_utils/dataset/dataset.csv")
     except Exception as e:
         return jsonify({"error": "Dataset no encontrado. Primero cargar el dataset."}), 400
 
@@ -79,6 +83,11 @@ def train_models(target_column, task_type, selected_algorithms):
     X = df.drop(columns=[target_column])
     y = df[target_column]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    joblib.dump(X_train, os.path.join(SPLIT_DATA_PATH, "X_train.pkl"))
+    joblib.dump(X_test, os.path.join(SPLIT_DATA_PATH, "X_test.pkl"))
+    joblib.dump(y_train, os.path.join(SPLIT_DATA_PATH, "y_train.pkl"))
+    joblib.dump(y_test, os.path.join(SPLIT_DATA_PATH, "y_test.pkl"))
 
     models_info = {}
 
@@ -111,28 +120,80 @@ def train_models(target_column, task_type, selected_algorithms):
     best_model = max(models_info, key=lambda x: models_info[x]["score"])
     return jsonify({"models": models_info, "best_model": best_model})
 
-def get_metrics(model_id):
+def get_metrics(model_id, task_type):
     try:
         model = joblib.load(os.path.join(DATA_PATH, model_id))
     except Exception as e:
         return jsonify({"error": "Modelo no encontrado"}), 400
-    # Aquí se pueden implementar métricas específicas según el tipo de modelo
-    # Por ejemplo, si es de clasificación se podría calcular una matriz de confusión o similar
-    # Se muestra un ejemplo genérico:
+
+    try:
+        X_train = joblib.load(os.path.join(SPLIT_DATA_PATH, 'X_train.pkl'))
+        X_test = joblib.load(os.path.join(SPLIT_DATA_PATH, 'X_test.pkl'))
+        y_train = joblib.load(os.path.join(SPLIT_DATA_PATH, 'y_train.pkl'))
+        y_test = joblib.load(os.path.join(SPLIT_DATA_PATH, 'y_test.pkl'))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    if task_type == "classification":
+        train_accuracy = accuracy_score(y_train, y_train_pred)
+        train_recall = recall_score(y_train, y_train_pred)
+        train_precision = precision_score(y_train, y_train_pred)
+        train_f1 = f1_score(y_train, y_train_pred)
+        train_roc_auc = roc_auc_score(y_train, y_train_pred)
+        train_confussion_matrix = confusion_matrix(y_train, y_train_pred).tolist()
+        return jsonify({
+            "metrics_train": {
+                "accuracy": train_accuracy,
+                "recall": train_recall,
+                "precision": train_precision,
+                "f1": train_f1,
+                "roc_auc": train_roc_auc,
+                "confusion_matrix": train_confussion_matrix
+            },
+            "metrics_test": {
+                "accuracy": accuracy_score(y_test, y_test_pred),
+                "recall": recall_score(y_test, y_test_pred),
+                "precision": precision_score(y_test, y_test_pred),
+                "f1": f1_score(y_test, y_test_pred),
+                "roc_auc": roc_auc_score(y_test, y_test_pred),
+                "confusion_matrix": confusion_matrix(y_test, y_test_pred).tolist()
+            }
+        })
+    elif task_type == "regression":
+        train_score = mean_squared_error(y_train, y_train_pred)
+        train_r2 = r2_score(y_train, y_train_pred)
+        train_mae = mean_absolute_error(y_train, y_train_pred)
+        train_medae = median_absolute_error(y_train, y_train_pred)
+        return jsonify({
+            "metrics_train": {
+                "score": train_score,
+                "r2": train_r2,
+                "mae": train_mae,
+                "medae": train_medae
+            },
+            "metrics_test": {
+                "score": mean_squared_error(y_test, y_test_pred),
+                "r2": r2_score(y_test, y_test_pred),
+                "mae": mean_absolute_error(y_test, y_test_pred),
+                "medae": median_absolute_error(y_test, y_test_pred)
+            }
+        })
     return jsonify({"metrics": {"score": "Métrica de ejemplo"}})
 
-def predict(model_id, data):
+def predict(model_id, inputs, target):
     try:
         model = joblib.load(os.path.join(DATA_PATH, model_id))
     except Exception as e:
         return jsonify({"error": "Modelo no encontrado"}), 400
 
-    features = data.get("features")
-    if features is None:
-        return jsonify({"error": "No se proporcionaron los datos de entrada"}), 400
+    df = pd.read_csv("../Back/dataset_utils/dataset/dataset.csv")
+    columns = df.columns.tolist()
 
-    prediction = model.predict([features])
-    return jsonify({"prediction": prediction.tolist()})
+    input_values = [inputs[column] for column in columns if column != target]
+    prediction = model.predict([input_values])
+    return jsonify({"prediction": prediction.tolist()[0]})
 
 def download_model(model_id):
     path = os.path.join(DATA_PATH, model_id)

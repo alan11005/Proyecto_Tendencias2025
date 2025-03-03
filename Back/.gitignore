@@ -1,1 +1,30 @@
 mivenv
+# Ignorar todos los archivos en la carpeta models
+models/*
+# No ignorar el archivo __init__.py en la carpeta models
+!models/__init__.py
+
+# Ignorar todos los archivos en dataset_utils/split_data
+dataset_utils/split_data/*
+# No ignorar la carpeta dataset_utils/split_data
+!dataset_utils/split_data/
+# No ignorar el archivo __init__.py en dataset_utils/split_data
+!dataset_utils/split_data/__init__.py
+
+# Ignorar todos los archivos en dataset_utils/dataset
+dataset_utils/dataset/*
+# No ignorar la carpeta dataset_utils/dataset
+!dataset_utils/dataset/
+# No ignorar el archivo __init__.py en dataset_utils/dataset
+!dataset_utils/dataset/__init__.py
+
+# Ignorar el directorio __pycache__
+__pycache__/
+
+# Ignorar archivos compilados de Python
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar archivos específicos de compilación de Python
+AlgorithmRoutes.cpython-312.pyc*
