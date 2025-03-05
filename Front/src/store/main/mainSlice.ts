@@ -1,4 +1,3 @@
-// store/slices/csvSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   CsvRow,
@@ -21,7 +20,7 @@ import {
 } from "@/utils/api";
 
 // Definimos la forma de nuestro estado
-interface CsvState {
+interface MainState {
   dataset: CsvRow[];                      // Datos del CSV parseados
   columns: string[];                      // Columnas del CSV
   targetColumn: string;                   // Columna objetivo elegida
@@ -58,7 +57,7 @@ interface CsvState {
 }
 
 // Estado inicial
-const initialState: CsvState = {
+const initialState: MainState = {
   dataset: [],
   columns: [],
   targetColumn: "",
@@ -93,7 +92,7 @@ const initialState: CsvState = {
   predictError: "",
 };
 
-export const csvSlice = createSlice({
+export const mainSlice = createSlice({
   name: "csvData",
   initialState,
   reducers: {
@@ -248,6 +247,6 @@ export const {
   setDataset,
   setTargetColumn,
   setTaskType,
-} = csvSlice.actions;
+} = mainSlice.actions;
 
-export default csvSlice.reducer;
+export default mainSlice.reducer;
