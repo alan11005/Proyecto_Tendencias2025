@@ -38,6 +38,7 @@ def predict_route():
     target = data.get("target")
     return predict(model_id, inputs, target)
 
-@algorithm_bp.route('/download/<model_id>', methods=['GET'])
-def download(model_id):
+@algorithm_bp.route('/download', methods=['GET'])
+def download():
+    model_id = request.get_json()["model_id"]
     return download_model(model_id)
