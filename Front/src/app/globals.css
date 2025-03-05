@@ -2,18 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Modo claro por defecto */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9fafb; /* Gris muy claro */
+  --foreground: #111827; /* Gris muy oscuro casi negro */
 }
 
+/* Modo oscuro con prefers-color-scheme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #111827; /* Gris muy oscuro */
+    --foreground: #f9fafb; /* Gris muy claro */
   }
 }
 
+/* Estilos globales */
 body {
   color: var(--foreground);
   background: var(--background);

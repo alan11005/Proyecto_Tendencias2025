@@ -1,103 +1,166 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setDataset, clearDataset } from "../store";
-import type { ChangeEvent } from "react";
+import Papa from "papaparse";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import {
+  setDataset,
+  uploadDatasetRequest,
+  selectTargetRequest,
+  setTaskType,
+} from "@/store/main/mainSlice";
+import { TaskTypes } from "@/utils/all";
+import { CsvRow } from "@/utils/all";
 
-export default function HomePage() {
+export default function UploadDatasetPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { id, columns } = useAppSelector((state) => state.dataset);
 
-  // Estado local para manejar el File antes de subirlo
-  const [file, setFile] = useState<File | null>(null);
+  // Estado global: obtén dataset, columns y bandera de si se subió con éxito
+  const {
+    dataset,
+    columns,
+    uploadDatasetSuccess,
+    uploadDatasetRequesting,
+    selectTargetSuccess,
+  } = useAppSelector((state) => state.main);
 
-  // Maneja el cambio en el input de tipo file
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+  // Referencia para el input oculto
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // En cuanto detectamos que se ha realizado con éxito el selectTarget,
+  // redirigimos a /select-target
+  useEffect(() => {
+    if (selectTargetSuccess) {
+      router.push("/select-target");
+    }
+  }, [selectTargetSuccess, router]);
+
+  // Se dispara al hacer clic en el botón "Cargar Dataset"
+  const handleSelectFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
-  // Llama a la API en Python para subir el archivo y obtener columnas
-  const handleUpload = async () => {
+  // Se dispara al seleccionar un archivo en el input
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      // Ejemplo de llamada al backend (ajusta la URL según tu API)
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("http://localhost:8000/upload", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) {
-        throw new Error("Error subiendo el archivo");
-      }
-
-      // Suponiendo que el backend retorna { datasetId, columns }
-      const data = await res.json();
-      dispatch(
-        setDataset({
-          id: data.datasetId,
-          columns: data.columns,
-          file, // Guardamos el File también en Redux si lo necesitas
-        })
-      );
-    } catch (error) {
-      console.error(error);
-      alert("Hubo un error subiendo el dataset.");
-    }
+    // Parseamos el archivo con PapaParse
+    Papa.parse<CsvRow>(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        // Guardamos dataset parseado en Redux
+        dispatch(setDataset(results.data));
+        // Despachamos la request de subir dataset al backend
+        dispatch(uploadDatasetRequest({ dataset: results.data }));
+      },
+      error: (err) => {
+        console.error("Error al parsear CSV:", err);
+      },
+    });
   };
 
-  // Botón "Continuar" -> va a la pantalla /select-target
-  const handleContinue = () => {
-    if (!id) {
-      alert("Primero debes subir un dataset.");
-      return;
-    }
-    router.push("/select-target");
+  // Lógica para despachar la acción selectTargetRequest
+  const handleSelectClassification = () => {
+    dispatch(setTaskType(TaskTypes.CLASSIFICATION));
+    dispatch(selectTargetRequest({ task_type: TaskTypes.CLASSIFICATION }));
   };
 
-  // Botón "Regresar" -> limpia el store y se queda en la misma página
-  const handleBack = () => {
-    dispatch(clearDataset());
-    setFile(null);
+  const handleSelectRegression = () => {
+    dispatch(setTaskType(TaskTypes.REGRESSION));
+    dispatch(selectTargetRequest({ task_type: TaskTypes.REGRESSION }));
   };
 
   return (
-    <main style={{ padding: "1rem" }}>
-      <h1>Página de Bienvenido</h1>
-      <p>Sube tu dataset para iniciar.</p>
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Subir CSV</h1>
 
-      <div style={{ margin: "1rem 0" }}>
-        <input type="file" onChange={handleFileChange} />
-        <button onClick={handleUpload} style={{ marginLeft: "0.5rem" }}>
-          Subir Dataset
-        </button>
-      </div>
+      {/* Botón para seleccionar y cargar archivo */}
+      <button
+        onClick={handleSelectFile}
+        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
+        disabled={uploadDatasetRequesting}
+      >
+        Cargar Dataset
+      </button>
 
-      {/* Previsualización de columnas, solo si ya hay columnas en Redux */}
-      {columns && columns.length > 0 && (
-        <div>
-          <h2>Previsualización de Columnas</h2>
-          <ul>
-            {columns.map((col) => (
-              <li key={col}>{col}</li>
-            ))}
-          </ul>
-        </div>
+      {/* Input de archivo oculto */}
+      <input
+        placeholder="Selecciona un archivo CSV"
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {uploadDatasetRequesting && (
+        <p className="mt-4 text-gray-600">Cargando dataset...</p>
       )}
 
-      <div style={{ marginTop: "1rem" }}>
-        <button onClick={handleContinue} style={{ marginRight: "0.5rem" }}>
-          Continuar
-        </button>
-        <button onClick={handleBack}>Regresar</button>
-      </div>
-    </main>
+      {/* Al completar con éxito, mostramos la previsualización */}
+      {uploadDatasetSuccess && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Previsualización</h2>
+
+          {/* Tabla de ejemplo con Tailwind */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  {columns.map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-100"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+                {dataset.slice(0, 5).map((row, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 
+                              dark:hover:bg-gray-700"
+                  >
+                    {columns.map((col) => (
+                      <td key={col} className="px-4 py-2 text-sm">
+                        {row[col]?.toString() ?? ""}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Botones de Clasificación / Regresión */}
+          <div className="flex gap-4 mt-6">
+            <button
+              type="button"
+              onClick={handleSelectClassification}
+              className="px-4 py-2 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
+            >
+              Clasificación
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSelectRegression}
+              className="px-4 py-2 bg-purple-600 text-white font-semibold rounded hover:bg-purple-700"
+            >
+              Regresión
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
