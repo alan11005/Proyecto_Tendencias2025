@@ -23,7 +23,7 @@ def train():
     # hyperparameters = data.get("hyperparameters", {})
     return train_models(target_column, task_type, selected_algorithms)
 
-@algorithm_bp.route('/metrics', methods=['GET'])
+@algorithm_bp.route('/metrics', methods=['POST'])
 def metrics():
     data = request.get_json()
     model_id = data.get("model_id")
