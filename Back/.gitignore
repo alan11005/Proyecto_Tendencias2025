@@ -1,4 +1,5 @@
 mivenv
+.venv
 # Ignorar todos los archivos en la carpeta models
 models/*
 # No ignorar el archivo __init__.py en la carpeta models
