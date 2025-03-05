@@ -8,6 +8,7 @@ import {
   setDataset,
   uploadDatasetRequest,
   selectTargetRequest,
+  setTaskType,
 } from "@/store/main/mainSlice";
 import { TaskTypes } from "@/utils/all";
 import { CsvRow } from "@/utils/all";
@@ -66,10 +67,12 @@ export default function UploadDatasetPage() {
 
   // Lógica para despachar la acción selectTargetRequest
   const handleSelectClassification = () => {
+    dispatch(setTaskType(TaskTypes.CLASSIFICATION));
     dispatch(selectTargetRequest({ task_type: TaskTypes.CLASSIFICATION }));
   };
 
   const handleSelectRegression = () => {
+    dispatch(setTaskType(TaskTypes.REGRESSION));
     dispatch(selectTargetRequest({ task_type: TaskTypes.REGRESSION }));
   };
 
@@ -107,28 +110,28 @@ export default function UploadDatasetPage() {
 
           {/* Tabla de ejemplo con Tailwind */}
           <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300">
-              <thead className="bg-gray-100 border-b border-gray-300">
+            <table className="min-w-full border border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={col}
-                      className="px-4 py-2 text-left text-sm font-medium text-gray-700"
+                      className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-100"
                     >
                       {col}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
                 {dataset.slice(0, 5).map((row, rowIndex) => (
                   <tr
                     key={rowIndex}
-                    className="border-b border-gray-200 hover:bg-gray-50"
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 
+                              dark:hover:bg-gray-700"
                   >
                     {columns.map((col) => (
-                      <td key={col} className="px-4 py-2 text-sm text-gray-700">
-                        {/* Asegúrate de manejar undefined/null si aplica */}
+                      <td key={col} className="px-4 py-2 text-sm">
                         {row[col]?.toString() ?? ""}
                       </td>
                     ))}
