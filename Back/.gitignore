@@ -21,6 +21,7 @@ dataset_utils/dataset/*
 
 # Ignorar el directorio __pycache__
 __pycache__/
+service/__pycache__/
 
 # Ignorar archivos compilados de Python
 *.pyc
