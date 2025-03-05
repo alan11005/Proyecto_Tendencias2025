@@ -29,8 +29,16 @@ interface MainState {
   bestModel: string;                      // Nombre del mejor modelo
   models: { [modelName: string]: ModelScoreData }; // Info de cada modelo entrenado
 
-  trainMetrics: ClassificationMetrics | RegressionMetrics | null;
-  testMetrics: ClassificationMetrics | RegressionMetrics | null;
+  trainMetrics:  null | {
+    id: string
+    model_name: string
+    metrics: ClassificationMetrics | RegressionMetrics
+  }[];
+  testMetrics: null | {
+    id: string
+    model_name: string
+    metrics: ClassificationMetrics | RegressionMetrics
+  }[];
 
   predictionResult: number | null;        // Resultado de la predicción
 
@@ -93,7 +101,7 @@ const initialState: MainState = {
 };
 
 export const mainSlice = createSlice({
-  name: "csvData",
+  name: "main",
   initialState,
   reducers: {
     // -------------------------------
@@ -164,18 +172,44 @@ export const mainSlice = createSlice({
     // -------------------------------
     // GET METRICS
     // -------------------------------
-    metricsRequest: (state, _action: PayloadAction<MetricsRequest>) => {
+    metricsRequest: (
+      state, 
+      _action: PayloadAction<MetricsRequest & {
+        model_name: string
+      }>
+    ) => {
       state.metricsRequesting = true;
       state.metricsSuccess = false;
       state.metricsError = "";
     },
-    metricsSuccess: (state, action: PayloadAction<MetricsResponse>) => {
+    metricsSuccess: (
+      state,
+      action: PayloadAction<MetricsResponse & {
+        model_id: string
+        model_name: string
+      }>
+    ) => {
       state.metricsRequesting = false;
       state.metricsSuccess = true;
       state.metricsError = "";
-      // Guardamos métricas
-      state.testMetrics = action.payload.metrics_test;
-      state.trainMetrics = action.payload.metrics_train;
+      const testMetrics = action.payload.metrics_test;
+      if (state.testMetrics === null) {
+        state.testMetrics = [];
+      }
+      state.testMetrics.push({
+        id: action.payload.model_id,
+        model_name: action.payload.model_name,
+        metrics: testMetrics,
+      });
+      const trainMetrics = action.payload.metrics_train;
+      if (state.trainMetrics === null) {
+        state.trainMetrics = [];
+      }
+      state.trainMetrics.push({
+        id: action.payload.model_id,
+        model_name: action.payload.model_name,
+        metrics: trainMetrics,
+      });
     },
     metricsFailure: (state, action: PayloadAction<string>) => {
       state.metricsRequesting = false;
