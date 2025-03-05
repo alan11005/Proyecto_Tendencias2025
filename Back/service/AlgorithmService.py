@@ -97,7 +97,7 @@ def train_models(target_column, task_type, selected_algorithms):
         scoring = accuracy_score
     elif task_type == "regression":
         available_models = REGRESSION_MODELS
-        scoring = lambda y_true, y_pred: -mean_squared_error(y_true, y_pred)  # Usamos negativo para maximizar
+        scoring = mean_squared_error  
     else:
         return jsonify({"error": "Tipo de tarea no válido"}), 400
 
@@ -168,13 +168,13 @@ def get_metrics(model_id, task_type):
         train_medae = median_absolute_error(y_train, y_train_pred)
         return jsonify({
             "metrics_train": {
-                "score": train_score,
+                "mse": train_score,
                 "r2": train_r2,
                 "mae": train_mae,
                 "medae": train_medae
             },
             "metrics_test": {
-                "score": mean_squared_error(y_test, y_test_pred),
+                "mse": mean_squared_error(y_test, y_test_pred),
                 "r2": r2_score(y_test, y_test_pred),
                 "mae": mean_absolute_error(y_test, y_test_pred),
                 "medae": median_absolute_error(y_test, y_test_pred)
