@@ -1,7 +1,8 @@
 import { 
   call, 
   put, 
-  takeLatest, 
+  takeLatest,
+  takeEvery,
   all 
 } from 'redux-saga/effects';
 import { PayloadAction } from '@reduxjs/toolkit';
@@ -63,10 +64,16 @@ function* trainModels(action: PayloadAction<TrainModelsRequest>) {
   }
 }
 
-function* getMetrics(action: PayloadAction<MetricsRequest>) {
+function* getMetrics(action: PayloadAction<MetricsRequest & {
+  model_name: string
+}>) {
   try {
     const response: MetricsResponse = yield call(apiService.getMetrics, action.payload);
-    yield put(metricsSuccess(response));
+    yield put(metricsSuccess({
+      ...response,
+      model_name: action.payload.model_name,
+      model_id: action.payload.model_id,
+    }));
   } catch (error) {
     yield put(metricsFailure('Error getting metrics'));
   }
@@ -86,7 +93,7 @@ export default function* mainSaga() {
     takeLatest(uploadDatasetRequest.type, uploadDataset),
     takeLatest(selectTargetRequest.type, selectTarget),
     takeLatest(trainModelsRequest.type, trainModels),
-    takeLatest(metricsRequest.type, getMetrics),
+    takeEvery(metricsRequest.type, getMetrics),
     takeLatest(predictRequest.type, predict),
   ]);
 }
