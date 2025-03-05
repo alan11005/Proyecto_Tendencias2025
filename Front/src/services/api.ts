@@ -53,7 +53,7 @@ class ApiService {
   public trainModels = async (
     data: TrainModelsRequest
   ): Promise<TrainModelsResponse> => {
-    const response = await this.client.post("/train-models", data);
+    const response = await this.client.post("/train", data);
     return response.data;
   };
 
@@ -63,7 +63,7 @@ class ApiService {
   public getMetrics = async (
     data: MetricsRequest
   ): Promise<MetricsResponse> => {
-    const response = await this.client.post("/get-metrics", data);
+    const response = await this.client.post("/metrics", data);
     return response.data;
   };
 
