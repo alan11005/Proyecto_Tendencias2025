@@ -15,9 +15,8 @@ import {
   TrainModelsResponse,
   MetricsRequest,
   MetricsResponse,
-  PredictRequest,
-  PredictResponse,
-} from "@/utils/api";
+  DownloadRequest,
+} from "@/utils/types/api/algorithm";
 
 // Definimos la forma de nuestro estado
 interface MainState {
@@ -59,9 +58,9 @@ interface MainState {
   metricsSuccess: boolean;
   metricsError: string;
 
-  predictRequesting: boolean;
-  predictSuccess: boolean;
-  predictError: string;
+  downloadRequesting: boolean;
+  downloadSuccess: boolean;
+  downloadError: string;
 }
 
 // Estado inicial
@@ -95,9 +94,9 @@ const initialState: MainState = {
   metricsSuccess: false,
   metricsError: "",
 
-  predictRequesting: false,
-  predictSuccess: false,
-  predictError: "",
+  downloadRequesting: false,
+  downloadSuccess: false,
+  downloadError: "",
 };
 
 export const mainSlice = createSlice({
@@ -218,25 +217,22 @@ export const mainSlice = createSlice({
     },
 
     // -------------------------------
-    // PREDICT
+    // DOWNLOAD
     // -------------------------------
-    // Si tuvieras un "PredictRequest" o "PredictResponse", puedes tiparlos igual que arriba
-    predictRequest: (state, action: PayloadAction<PredictRequest>) => {
-      state.predictRequesting = true;
-      state.predictSuccess = false;
-      state.predictError = "";
-      state.predictionResult = null;
+    downloadRequest: (state, _action: PayloadAction<DownloadRequest>) => {
+      state.downloadRequesting = true;
+      state.downloadSuccess = false;
+      state.downloadError = "";
     },
-    predictSuccess: (state, action: PayloadAction<PredictResponse>) => {
-      state.predictRequesting = false;
-      state.predictSuccess = true;
-      state.predictError = "";
-      state.predictionResult = action.payload.prediction;
+    downloadSuccess: (state) => {
+      state.downloadRequesting = false;
+      state.downloadSuccess = true;
+      state.downloadError = "";
     },
-    predictFailure: (state, action: PayloadAction<string>) => {
-      state.predictRequesting = false;
-      state.predictSuccess = false;
-      state.predictError = action.payload;
+    downloadFailure: (state, action: PayloadAction<string>) => {
+      state.downloadRequesting = false;
+      state.downloadSuccess = false;
+      state.downloadError = action.payload;
     },
 
     // -------------------------------
@@ -274,9 +270,9 @@ export const {
   metricsSuccess,
   metricsFailure,
 
-  predictRequest,
-  predictSuccess,
-  predictFailure,
+  downloadRequest,
+  downloadSuccess,
+  downloadFailure,
 
   setDataset,
   setTargetColumn,

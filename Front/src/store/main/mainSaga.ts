@@ -19,11 +19,11 @@ import {
   metricsRequest,
   metricsSuccess,
   metricsFailure,
-  predictRequest,
-  predictSuccess,
-  predictFailure,
+  downloadRequest,
+  downloadSuccess,
+  downloadFailure,
 } from './mainSlice';
-import apiService from '@/services/api';
+import apiService from '@/services/api/algorithm';
 import type {
   UploadDatasetRequest,
   UploadDatasetResponse,
@@ -33,9 +33,8 @@ import type {
   TrainModelsResponse,
   MetricsRequest,
   MetricsResponse,
-  PredictRequest,
-  PredictResponse,
-} from '@/utils/api';
+  DownloadRequest,
+} from '@/utils/types/api/algorithm';
 
 function* uploadDataset(action: PayloadAction<UploadDatasetRequest>) {
   try {
@@ -79,12 +78,22 @@ function* getMetrics(action: PayloadAction<MetricsRequest & {
   }
 }
 
-function* predict(action: PayloadAction<PredictRequest>) {
+function* download(action: PayloadAction<DownloadRequest>) {
   try {
-    const response: PredictResponse = yield call(apiService.predict, action.payload);
-    yield put(predictSuccess(response));
+    const response: Blob = yield call(apiService.download, action.payload);
+
+    const url = window.URL.createObjectURL(new Blob([response]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'model.pkl');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    yield put(downloadSuccess());
   } catch (error) {
-    yield put(predictFailure('Error predicting'));
+    yield put(downloadFailure('Error downloading file'));
   }
 }
 
@@ -94,6 +103,6 @@ export default function* mainSaga() {
     takeLatest(selectTargetRequest.type, selectTarget),
     takeLatest(trainModelsRequest.type, trainModels),
     takeEvery(metricsRequest.type, getMetrics),
-    takeLatest(predictRequest.type, predict),
+    takeEvery(downloadRequest.type, download),
   ]);
 }
