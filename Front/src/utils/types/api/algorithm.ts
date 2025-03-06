@@ -1,4 +1,4 @@
-import { CsvRow, TaskTypes } from "./all";
+import { CsvRow, TaskTypes } from "../../all";
 
 export interface ModelScoreData {
   id: string;
@@ -61,12 +61,6 @@ export interface MetricsResponse {
   metrics_train: ClassificationMetrics | RegressionMetrics;
 }
 
-export interface PredictRequest {
+export interface DownloadRequest {
   model_id: string;
-  target: string;
-  inputs: CsvRow[];
-}
-
-export interface PredictResponse {
-  prediction: number;
 }
