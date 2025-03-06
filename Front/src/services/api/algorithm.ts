@@ -9,12 +9,11 @@ import {
   TrainModelsResponse,
   MetricsRequest,
   MetricsResponse,
-  PredictRequest,
-  PredictResponse,
-} from "@/utils/api";
+  DownloadRequest,
+} from "@/utils/types/api/algorithm";
 
 // Aquí defines la URL base de tu backend (puedes usar variable de entorno)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/app/algorithm";
+const API_ALGORITHM_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/app/algorithm";
 
 class ApiService {
   private client: AxiosInstance;
@@ -22,7 +21,7 @@ class ApiService {
   constructor() {
     // Inicializamos la instancia de axios
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: API_ALGORITHM_BASE_URL,
       // Puedes setear headers comunes, interceptores, etc.
     });
   }
@@ -68,12 +67,14 @@ class ApiService {
   };
 
   // ----------------------
-  // PREDICT
+  // DOWNLOAD
   // ----------------------
-  public predict = async (
-    data: PredictRequest
-  ): Promise<PredictResponse> => {
-    const response = await this.client.post("/predict", data);
+  public download = async (
+    data: DownloadRequest
+  ): Promise<Blob> => {
+    const response = await this.client.post("/download", data, {
+      responseType: "blob",
+    });
     return response.data;
   };
 }
