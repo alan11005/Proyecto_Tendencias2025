@@ -34,6 +34,10 @@ export default function SelectTargetPage() {
   };
 
   useEffect(() => {
+    document.title = "Selección de objetivo";
+  }, []);
+
+  useEffect(() => {
     if (trainModelsSuccess) {
       router.push("/results");
     }
