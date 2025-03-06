@@ -1,6 +1,6 @@
 import React from "react";
 import { TaskTypes } from "@/utils/all";
-import { ClassificationMetrics, RegressionMetrics } from "@/utils/api";
+import { ClassificationMetrics, RegressionMetrics } from "@/utils/types/api/algorithm";
 
 interface MetricsCardProps {
   taskType: TaskTypes;
