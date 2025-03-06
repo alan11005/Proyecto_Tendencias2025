@@ -16,10 +16,11 @@ export default function MetricsCard({ taskType, metrics }: MetricsCardProps) {
     const classification = metrics as ClassificationMetrics;
 
     return (
-      // Usamos colores con buen contraste en modo claro y oscuro
-      <div className="p-4 border rounded bg-gray-50 dark:bg-gray-800 
-                      text-gray-800 dark:text-gray-100 border-gray-200 
-                      dark:border-gray-700 shadow-sm">
+      <div
+        className="p-4 border rounded bg-gray-50 dark:bg-gray-800
+        text-gray-800 dark:text-gray-100 border-gray-200
+        dark:border-gray-700 shadow-sm"
+      >
         <h2 className="text-lg font-bold mb-2">Métricas de Clasificación</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-2 border rounded border-gray-200 dark:border-gray-700">
@@ -41,23 +42,12 @@ export default function MetricsCard({ taskType, metrics }: MetricsCardProps) {
 
         {/* Matriz de confusión */}
         <div className="mt-4">
-          <h3 className="font-semibold">Confusion Matrix</h3>
-          <table className="mt-2 border border-gray-200 dark:border-gray-700 text-sm">
-            <tbody>
-              {classification.confusion_matrix.map((row, rowIndex) => (
-                <tr key={rowIndex} className="divide-x divide-gray-200 dark:divide-gray-700">
-                  {row.map((value, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className="px-3 py-1 text-center border border-gray-200 dark:border-gray-700"
-                    >
-                      {value}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h3 className="font-semibold">Matriz de Confusión</h3>
+          {is2x2Matrix(classification.confusion_matrix) ? (
+            <ConfusionMatrix2x2 matrix={classification.confusion_matrix} />
+          ) : (
+            <GenericConfusionMatrix matrix={classification.confusion_matrix} />
+          )}
         </div>
       </div>
     );
@@ -66,9 +56,11 @@ export default function MetricsCard({ taskType, metrics }: MetricsCardProps) {
   // Métricas de regresión
   const regression = metrics as RegressionMetrics;
   return (
-    <div className="p-4 border rounded bg-gray-50 dark:bg-gray-800 
-                    text-gray-800 dark:text-gray-100 border-gray-200 
-                    dark:border-gray-700 shadow-sm">
+    <div
+      className="p-4 border rounded bg-gray-50 dark:bg-gray-800
+      text-gray-800 dark:text-gray-100 border-gray-200
+      dark:border-gray-700 shadow-sm"
+    >
       <h2 className="text-lg font-bold mb-2">Métricas de Regresión</h2>
       <div className="grid grid-cols-2 gap-4">
         <div className="p-2 border rounded border-gray-200 dark:border-gray-700">
@@ -91,3 +83,69 @@ export default function MetricsCard({ taskType, metrics }: MetricsCardProps) {
   );
 }
 
+/** Comprueba si la matriz es 2x2 */
+function is2x2Matrix(matrix: number[][]) {
+  return (
+    matrix.length === 2 &&
+    matrix[0].length === 2 &&
+    matrix[1].length === 2
+  );
+}
+
+/** Renderiza una matriz de confusión 2x2 con labels TN, FP, FN, TP */
+function ConfusionMatrix2x2({ matrix }: { matrix: number[][] }) {
+  const [[tn, fp], [fn, tp]] = matrix;
+  return (
+    <table className="mt-2 border border-gray-200 dark:border-gray-700 text-sm w-full">
+      <thead className="bg-gray-100 dark:bg-gray-800">
+        <tr>
+          <th className="p-2"></th>
+          <th className="p-2 text-center">Pred. Negativo</th>
+          <th className="p-2 text-center">Pred. Positivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="divide-x divide-gray-200 dark:divide-gray-700">
+          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Actual Negativo</th>
+          <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
+            <strong>Verdaderos Negativos (TN):</strong> {tn}
+          </td>
+          <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
+            <strong>Falsos Positivos (FP):</strong> {fp}
+          </td>
+        </tr>
+        <tr className="divide-x divide-gray-200 dark:divide-gray-700">
+          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Actual Positivo</th>
+          <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
+            <strong>Falsos Negativos (FN):</strong> {fn}
+          </td>
+          <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
+            <strong>Verdaderos Positivos (TP):</strong> {tp}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+/** Renderizado genérico si no es 2x2 */
+function GenericConfusionMatrix({ matrix }: { matrix: number[][] }) {
+  return (
+    <table className="mt-2 border border-gray-200 dark:border-gray-700 text-sm">
+      <tbody>
+        {matrix.map((row, rowIndex) => (
+          <tr key={rowIndex} className="divide-x divide-gray-200 dark:divide-gray-700">
+            {row.map((value, colIndex) => (
+              <td
+                key={colIndex}
+                className="px-3 py-1 text-center border border-gray-200 dark:border-gray-700"
+              >
+                {value}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
