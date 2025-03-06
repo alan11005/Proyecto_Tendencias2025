@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 import React, { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { metricsRequest } from "@/store/main/mainSlice";
+import { metricsRequest, downloadRequest } from "@/store/main/mainSlice"; // <--- IMPORTA LA ACCIÓN
 import { TaskTypes } from "@/utils/all";
 import MetricsCard from "@/components/MetricsCard";
 
@@ -18,10 +18,14 @@ export default function ResultsPage() {
     taskType,
   } = useAppSelector((state) => state.main);
 
-  // Ref para evitar que el effect se ejecute 2 veces en Strict Mode
+  // Ref para evitar doble request en Strict Mode
   const didRequestMetrics = useRef(false);
 
-  // Al cargar la página, pedimos las métricas de cada modelo
+  useEffect(() => {
+    document.title = "Resultados del entrenamiento";
+  }, []);
+
+  // Al montar, pedimos métricas de cada modelo
   useEffect(() => {
     if (didRequestMetrics.current) return;
 
@@ -41,11 +45,15 @@ export default function ResultsPage() {
     }
   }, [models, taskType, dispatch]);
 
-  // 1. Creamos un Set con los IDs que aparecen en testMetrics o trainMetrics
+  // Conjunto de IDs que aparecen en testMetrics o trainMetrics
   const modelIds = new Set<string>();
-
   testMetrics?.forEach((tm) => modelIds.add(tm.id));
   trainMetrics?.forEach((tm) => modelIds.add(tm.id));
+
+  // Manejador para descargar el modelo
+  const handleDownload = (modelId: string) => {
+    dispatch(downloadRequest({ model_id: modelId }));
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -57,13 +65,13 @@ export default function ResultsPage() {
         <p className="text-red-600">Error al obtener métricas: {metricsError}</p>
       )}
 
-      {/* Para cada ID, mostramos las métricas de TRAIN y TEST */}
+      {/* Para cada modelo ID, mostramos métricas Train y Test */}
       {Array.from(modelIds).map((id) => {
-        // Obtenemos las métricas de test y train para este ID
+        // Obtenemos métricas test / train para este modelo
         const test = testMetrics?.find((item) => item.id === id);
         const train = trainMetrics?.find((item) => item.id === id);
 
-        // El nombre de modelo puede estar en test o en train (donde primero aparezca)
+        // Nombre de modelo (se toma de test o train)
         const modelName = test?.model_name || train?.model_name || "Desconocido";
 
         return (
@@ -71,7 +79,7 @@ export default function ResultsPage() {
             <h2 className="text-xl font-semibold mb-4">Modelo: {modelName}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Sección de Train Metrics */}
+              {/* Métricas de Entrenamiento */}
               <div className="p-2 border rounded bg-white dark:bg-gray-900 shadow-sm border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-bold mb-2">Entrenamiento</h3>
                 {train ? (
@@ -81,7 +89,7 @@ export default function ResultsPage() {
                 )}
               </div>
 
-              {/* Sección de Test Metrics */}
+              {/* Métricas de Prueba */}
               <div className="p-2 border rounded bg-white dark:bg-gray-900 shadow-sm border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-bold mb-2">Prueba</h3>
                 {test ? (
@@ -91,6 +99,14 @@ export default function ResultsPage() {
                 )}
               </div>
             </div>
+
+            {/* Botón para descargar el modelo */}
+            <button
+              onClick={() => handleDownload(id)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700"
+            >
+              Descargar modelo entrenado
+            </button>
           </div>
         );
       })}
