@@ -84,7 +84,7 @@ export default function MetricsCard({ taskType, metrics }: MetricsCardProps) {
           {regression.r2.toFixed(3)}
         </div>
         <div className="p-2 border rounded border-gray-200 dark:border-gray-700">
-          <strong>Score:</strong> {regression.score.toFixed(3)}
+          <strong>MSE:</strong> {regression.mse.toFixed(3)}
         </div>
       </div>
     </div>
