@@ -17,8 +17,8 @@ export interface ClassificationMetrics {
 export interface RegressionMetrics {
   mae: number;
   medae: number;
+  mse: number;
   r2: number;
-  score: number;
 }
 
 export interface UploadDatasetRequest {
