@@ -100,27 +100,27 @@ function ConfusionMatrix2x2({ matrix }: { matrix: number[][] }) {
       <thead className="bg-gray-100 dark:bg-gray-800">
         <tr>
           <th className="p-2"></th>
-          <th className="p-2 text-center">Pred. Negativo</th>
-          <th className="p-2 text-center">Pred. Positivo</th>
+          <th className="p-2 text-center">Real Positivo</th>
+          <th className="p-2 text-center">Real Negativo</th>
         </tr>
       </thead>
       <tbody>
         <tr className="divide-x divide-gray-200 dark:divide-gray-700">
-          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Actual Negativo</th>
+          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Pred. Positivo</th>
           <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
-            <strong>Verdaderos Negativos (TN):</strong> {tn}
+            <strong>Verdaderos Positivos (TP):</strong> {tp}
           </td>
           <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
             <strong>Falsos Positivos (FP):</strong> {fp}
           </td>
         </tr>
         <tr className="divide-x divide-gray-200 dark:divide-gray-700">
-          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Actual Positivo</th>
+          <th className="p-2 text-left bg-gray-50 dark:bg-gray-900">Pred. Negativo</th>
           <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
             <strong>Falsos Negativos (FN):</strong> {fn}
           </td>
           <td className="px-3 py-2 text-center border border-gray-200 dark:border-gray-700">
-            <strong>Verdaderos Positivos (TP):</strong> {tp}
+            <strong>Verdaderos Negativos (TN):</strong> {tn}
           </td>
         </tr>
       </tbody>
